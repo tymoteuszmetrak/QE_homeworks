@@ -163,7 +163,7 @@ cor(data)[1,2:3] #0.39; 0.25
 # There is a small positive correlation between hours worked and earnings at ca. 0.25.
 # There seems to be a minute average increase of earnings with hours worked until the hours worked reach 70, then the earnings seem to slightly decrease. 
 # Numerically, the correlation is low also because e.g. people earning slightly below 4.0x10^5 
-# seem to work various hours which are distributed roughly uniformly
+# seem to work various hours which are distributed roughly uniformly.
 # Additionally, we might suspect a feedback loop between x = hours worked and y = earnings, 
 # which would result in an inconsistent estimate of the effect of x on y in a hypothetical simple regression. 
 # Ceteris paribus, people who work more should earn more as they exhibit more effort, 
