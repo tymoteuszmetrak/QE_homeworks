@@ -1,7 +1,7 @@
 using DelimitedFiles, Plots, Statistics #Hincz, Kuba, Mętrak, Szymczak
 
 # Problem 1: Odd or Even
-#a) with validation of integers
+# a) with validation of integers
 function odd_or_even(n)
     if typeof(n) == Int64
         if iseven(n) == true
@@ -22,7 +22,7 @@ odd_or_even(-3)
 odd_or_even(-4)
 odd_or_even(4.5)
 
-#b - without validation of integers
+# b - without validation of integers
 function odd_or_even_2(x)
     if iseven(x) == true
         println("Even")
@@ -31,6 +31,7 @@ function odd_or_even_2(x)
     end
 end
 
+# Examples 
 odd_or_even_2(9)
 odd_or_even_2(6)
 odd_or_even_2(0)
@@ -86,8 +87,7 @@ count_positives([1, -3, 4, 7, -2, 0]) # Output: 3
 count_positives([-5, -10, 0, 6]) # Output: 1
 
 
-# Problem 5: Plotting Powers of x Using a Loop 
-
+# Problem 5: Plotting Powers of x Using a Loop
 function plot_powers(n)
     if n>0 && isinteger(n)     
         power_plot = plot()
@@ -112,10 +112,75 @@ my_plot
 
 
 # Problem 5 prim: Count Positive Numbers Using Broadcasting
-
 function count_positives_broadcasting(arr)
     return sum(arr .> 0)
 end
 count_positives_broadcasting([1, -3, 4, 7, -2, 0]) # 3
 count_positives_broadcasting([-5, -10, 0, 6]) # 1
 
+
+# Problem 6: Standard Deviation Using Broadcasting and Vectorized Operations
+function standard_deviation(x)
+    μ = sum(x)/length(x)
+    d = x .- μ
+    squared_d = d.^2
+    variance = sum(squared_d)/(length(x)-1)
+    SD = variance^(0.5)
+    return SD
+end
+
+standard_deviation([1,1,1,1]) #0.0 as expected
+standard_deviation([1, 2, 3, 4, 5]) # Output: 1.5811388300841898
+standard_deviation([5, 10, 15]) # Output: 5.0
+standard_deviation(2:7) # Output: 1.8708286933869707
+
+
+# Problem 7: Import the Data, Plot It, and Calculate Correlations
+pwd()
+
+data = readdlm("Problem set 1//dataset.csv", ',',Int64)
+# each column contains the data for earnings, education, and hours worked, respectively 
+
+plot_1 = scatter(data[:,2],data[:,1], #education (2nd column) as x, earnings (1st column) as y
+label = "Earnings vs. Education",
+xaxis="Education",
+yaxis="Earnings",
+title="Relationship between education and earnings",
+markercolor = :green)
+
+plot_2 = scatter(data[:,3], data[:,1],
+label = "Earnings vs. Hours worked",
+xaxis="Hours worked",
+yaxis="Earnings",
+title="Relationship between hours worked and earnings",
+markercolor=:red)
+
+# correlation between earnings and education (first number), and hours worked (second)
+cor(data)[1,2:3] #0.39; 0.25
+
+# Discussion
+
+# There is a small positive correlation between hours worked and earnings at ca. 0.25.
+# There seems to be a minute average increase of earnings with hours worked until the hours worked reach 70, then the earnings seem to slightly decrease. 
+# Numerically, the correlation is low also because e.g. people earning slightly below 4.0x10^5 
+# seem to work various hours which are distributed roughly uniformly
+# Additionally, we might suspect a feedback loop between x = hours worked and y = earnings, 
+# which would result in an inconsistent estimate of the effect of x on y in a hypothetical simple regression. 
+# Ceteris paribus, people who work more should earn more as they exhibit more effort, 
+# but on the other hand leisure is a normal good for many people who would like to work less if they earned more.
+
+
+# The correlation between education and earnings is stronger and more straightforward
+# though still relatively mild at around 0.39.
+# It may be concluded that the more years of formal education, the more person earns.
+#This is probably because additional education allows to gain incremental knowledge and skills 
+#valuable to some extent in the labour market. 
+#Moreover, additional passed years of education signal intrinsic ability.
+
+# All in all, this is probably not the best method to calculate the correlation
+#because education is a discrete variable.
+# It may make more sense to compare means of earnings between groups of people with given years of education.
+#it is important to bear in mind that correlation is a linear measure of association, but both examined associations could be of non-linear variety.  
+
+#for both of the above relations 
+#more formal analysis (e.g. multivariate regression) is advised in order to draw more reliable conclusions
