@@ -41,11 +41,11 @@ odd_or_even_2(4.5) #incorrect
 # Problem 2 
 function compare_three(a, b, c)
     if (a > 0 && b > 0 && c > 0)
-        print("All numbers are positive")
+        println("All numbers are positive")
     elseif (a == 0 && b == 0 && c == 0) #2nd condition, because it is a special case of "At least one number is not positive"
-        print("All numbers are zero")
+        println("All numbers are zero")
     else
-        print("At least one number is not positive")
+        println("At least one number is not positive")
     end
 end
 
