@@ -9,7 +9,8 @@ function odd_or_even(n)
         else
             println("Odd")
         end
-    else println("not an integer")
+    else 
+        println("not an integer")
     end
 end
 
@@ -22,7 +23,7 @@ odd_or_even(-4)
 odd_or_even(4.5)
 
 #b - without validation of integers
-function odd_or_even(x)
+function odd_or_even_2(x)
     if iseven(x) == true
         println("Even")
     else
@@ -30,19 +31,19 @@ function odd_or_even(x)
     end
 end
 
-odd_or_even(9)
-odd_or_even(6)
-odd_or_even(0)
-odd_or_even(-3)
-odd_or_even(-4)
-odd_or_even(4.5) #incorrect
+odd_or_even_2(9)
+odd_or_even_2(6)
+odd_or_even_2(0)
+odd_or_even_2(-3)
+odd_or_even_2(-4)
+odd_or_even_2(4.5) #incorrect
 
 # Problem 2 
 function compare_three(a, b, c)
     if (a > 0 && b > 0 && c > 0)
         print("All numbers are positive")
     elseif (a == 0 && b == 0 && c == 0) #2nd condition, because it is a special case of "At least one number is not positive"
-        print("All numbers are equal to zero")
+        print("All numbers are zero")
     else
         print("At least one number is not positive")
     end
