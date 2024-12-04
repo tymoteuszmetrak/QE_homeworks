@@ -3,6 +3,5 @@ Solutions to problem sets for the subject "Quantitative Economics" offered by th
 
 ## Authors
 * Jan Hincz
-* Krzysztof Kuba
 * Tymoteusz Mętrak
 * Wojciech Szymczak
