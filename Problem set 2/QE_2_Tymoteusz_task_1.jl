@@ -52,7 +52,7 @@ function naive_optimization(fun, guess, α; ϵ = 10e-6, maxiter=1000)
         # Breaking the loop if maximum iterations are reached
         if count >= maxiter
             println("Maximum number of iternations was reached")
-            # Flag set to 1, if the result was nout found
+            # Flag set to 1, if the result was not found
             flag = 1
             # Solution is set to not a number, if it wasn't found
             x_new = NaN
@@ -77,7 +77,7 @@ function naive_optimization(fun, guess, α; ϵ = 10e-6, maxiter=1000)
                 value = value, 
                 absolute_difference = difference,
                 vector_of_all_x = x_vector, 
-                vectot_of_all_residuals = residuals)
+                vector_of_all_residuals = residuals)
 end
 
 
