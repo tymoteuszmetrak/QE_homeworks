@@ -6,7 +6,7 @@ using PrettyTables, Plots, LaTeXStrings, LinearAlgebra, NLsolve, Optim, Roots, C
 # QE 2024
 
 # Problem 1 
-function naive_optimization(fun, guess, α; ϵ = 10e-6, maxiter=1000)
+function naive_optimization(fun, guess, α; ϵ = 1e-6, maxiter=1000)
     # The guess will be the first x input to the algorithm
     x_old = guess
 
@@ -20,13 +20,13 @@ function naive_optimization(fun, guess, α; ϵ = 10e-6, maxiter=1000)
     end
 
     # Applying modified version of the algorithm
-    function mod_algorithm(α, x)
+    function mod_algorithm(x)
         x = (1-α)*g(x)+α*x
         return x
     end
 
     # First calculation of the root
-    x_new = mod_algorithm(α, x_old)
+    x_new = mod_algorithm(x_old)
 
     # Add x value to the vector
     x_vector = push!(x_vector, x_new)
@@ -48,7 +48,7 @@ function naive_optimization(fun, guess, α; ϵ = 10e-6, maxiter=1000)
     # The loop that runs as long as the solution is further from the truth then epsilon
     while closeness>=ϵ
         x_old = x_new
-        x_new = mod_algorithm(α, x_old)
+        x_new = mod_algorithm(x_old)
         residual = abs(x_new-x_old)
         residuals = push!(residuals, residual)
         closeness = residual/(1+abs(x_old))
@@ -93,31 +93,37 @@ function f(x)
     return (x+1)^(1/3)-x
 end
 
-# Let's start with alpha=1 and 0 starting point
-naive_optimization(f, 1,0)
+# Let's start with 1 starting point and alpha=0
+naive_optimization(f, 1, 0)
+
+# We didn't obtain any reasonable answer. We set alpha to 0, so the algorit
 
 #  Now we'll do some experimenting with alpha and starting point
-# Let's decrease the parameter responsible for dampening
-naive_optimization(f, 0.1,0)
-# It resulted only with one more iteration (8 instead of 7). Let's decrease more
-naive_optimization(f, 0.0000001,0)
-# The algorithm works very well, it still finds the solution after only 8 iterations
+# Let's increase the parameter responsible for dampening
+naive_optimization(f, 1, 0.5)
+# It resulted only with more iterationa (23 instead of 9). Let's increase it more
+naive_optimization(f, 1, 0.99)
+# The algorithm works  well, it still finds the solution.
+# However, it took as much as 867 iterations!
 
 # Now let's tamper the starting point
 # The function is in real number, so the smallest guess may be -1
 # Let's see that on a plot
-using Plots
+
 plot(f, -2,5, label = "function f(x)")
 
-# We'll start with -1, instead of 0
-naive_optimization(f, 0.5,-1)
-# It converged from -1, but needed 24 iterations
-# Let's start from 1 instead
-naive_optimization(f, 0.5,1)
-# The algorithm gave nonsense results for guess=1
+# We'll start with -1, instead of 1
+naive_optimization(f, -1, 0)
+# It converged from -1 and needed 11 iterations
+# Let's start from 0 instead
+naive_optimization(f, 0, 0)
+# The algorithm worked as well
+# Will it find a soltion if we move more to right on a plot?
+naive_optimization(f, 10, 0)
+# we found it and only after 10 iterations!
 
-# Well, while changing the alpha doesn't influence the optimization much, 
-# the unsuitable initial guess may be responsible for giving impossible answers
+# We saw that changing the alpha significantly influences the optimization (number of iterations)
+# However the initial guess seems to have lower influence on the results and the speed of getting there.
 
 # Below we will test wheteher the solution will be found
 # for a different function
@@ -146,7 +152,7 @@ naive_optimization(m,0.5,0.5)
 
 # At first we calculate an exact solution
 function exact(α, β)
-    x = [1 1 1 1 1]
+    x = [1, 1, 1, 1, 1]
     return(x)
 end
 
@@ -157,8 +163,8 @@ exact(0,0)
 # Then we proceed to a function, that present both exact solution 
 # and the one obtained with backslash operator
 function solver(α, β)
-    # The eexact solution
-    x_exact = [1 1 1 1 1]
+    # The exact solution
+    x_exact = [1, 1, 1, 1, 1]
     
     # We define matrix A and matrix b
     A = [1 0 0 0 0; -1 1 0 0 0; 0 -1 1 0 0; (α-β) 0 -1 1 0; β 0 0 -1 1]'
@@ -183,7 +189,7 @@ result = solver(0.1, 1000000000000)
 
 
 # In order to create a table that shows x1  the condition number, and the relative residual
-# we build  a function that do so for a given number of β.
+# we build  a function that does so for a given number of β.
 # We supply a maximum power, to which we take 10 and calculate β.
 
 
