@@ -348,13 +348,13 @@ function optimize_cost(a,s,w1, w2, y)
         optimal_x = Optim.minimizer(result)
         optimal_cost = Optim.minimum(result)
         return optimal_x, optimal_cost
-end
+    end
         
         # Optimise 
         optimize_ces(w1, w2, y, a, s)
         optimal_x, optimal_cost = optimize_ces(w1, w2, y, a, s)
         return optimal_x, optimal_cost
-    end
+    
 end
 
 
