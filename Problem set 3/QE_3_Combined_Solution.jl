@@ -569,7 +569,7 @@ marginal_X0 = sum(joint_stationary_distr[1:3])
 marginal_X1 = sum(joint_stationary_distr[4:6])
 marginal_X2 = sum(joint_stationary_distr[7:9])
 marginal_X3 = sum(joint_stationary_distr[10:12])
-marginal_X4 = sum(joint_stationary_distr[13:16])
+marginal_X4 = sum(joint_stationary_distr[13:15])
 marginal_X5 = sum(joint_stationary_distr[16:18])
 
 marginalX = vcat(marginal_X0, marginal_X1, marginal_X2, marginal_X3, marginal_X4, marginal_X5)
@@ -578,4 +578,4 @@ marginalX = vcat(marginal_X0, marginal_X1, marginal_X2, marginal_X3, marginal_X4
 #4.3
 X_values = collect(0:5)
 
-EX = marginalX' * X_values #EX = 0.7232142857142858
+EX = marginalX' * X_values #EX = 0.7098214285714288
