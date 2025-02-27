@@ -1,0 +1,158 @@
+\documentclass{article}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{geometry}
+\geometry{a4paper, margin=1in}
+
+\title{Quantitative Economics - Final Project}
+\author{Jan Hincz, Tymoteusz Metrak, Wojciech Szymczak}
+\date{January 26, 2025}
+
+\begin{document}
+
+\maketitle
+
+
+\section*{Tax Reform in a Heterogeneous Agent Model}
+In this project, you will study the effects of a tax reform that increases the degree of labor tax progressivity.
+
+Consider an economy with a continuum of agents indexed by \(i \in [0,1]\). The agents maximize the following expected utility:
+
+\[
+\max_{\{c_{i,t}\}_{t=0}^{\infty}} \mathbb{E}_{0} \sum_{t=0}^{\infty} \beta^{t} u(c_{i,t}),
+\]
+
+where \(\beta \in (0,1)\) is the discount factor, \(u(c_{i,t}) = \frac{c_{i}^{1-\gamma} - 1}{1 - \gamma}\) is the period utility function, and \(c_{i,t}\) is consumption at time \(t\). The agents face the following budget constraint:
+
+\[
+c_{i,t} + a_{i,t+1} = y_{i,t} - \mathcal{T}(y_{i,t}) + (1 + r) a_{i,t},
+\]
+
+where \(a_{i,t}\) is the asset holdings of agent \(i\) at time \(t\), \(y_{i,t}\) is the \textit{pre-tax} labor income, \(r\) is the net rate of return on assets, and \(\mathcal{T}(\cdot)\) is the tax function. We will call \(\tilde{y}_{i,t} = y_{i,t} - \mathcal{T}(y_{i,t})\) the \textit{post-tax} labor income.
+
+The pre-tax labor income is given by \(y_{i,t} = z_{i,t} w\), where \(z_{i,t}\) is the idiosyncratic productivity level, and \(w\) is the wage rate.
+
+The tax function is given by
+
+\[
+\mathcal{T}(y_{i,t}) = y_{i,t} - (1 - \tau) \left( \frac{y_{i,t}}{\bar{y}} \right)^{1 - \lambda} \bar{y}.
+\]
+
+Here, \(\tau\) is the average tax rate on labor income, \(\bar{y}\) is the average labor income in the economy, and \(\lambda\) is the degree of progressivity of the tax system. With \(\lambda > 0\), the tax system is progressive: agents with higher labor income face higher tax rates.
+
+With the tax function above, the post-tax labor income is a geometric weighted average of the pre-tax labor income and the average labor income in the economy:
+
+\[
+\tilde{y}_{i,t} = (1 - \tau) y_{i,t}^{1 - \lambda} \bar{y}^{\lambda}.
+\]
+
+The idiosyncratic productivity level follows an AR(1) process:
+
+\[
+\ln z_{i,t+1} = \rho \ln z_{i,t} + (1 - \rho) \ln \tilde{z} + \varepsilon_{i,t+1},
+\]
+
+where \(\rho \in (0,1)\) is the persistence parameter, and \(\epsilon_{i,t+1}\) is an i.i.d. shock with mean zero and variance \(\sigma^{2}\). \(\tilde{z}\) is a constant that normalizes the productivity level: \(\mathbb{E} z_{i,t} = 1\).
+
+Finally, agents face a borrowing constraint \(a_{i,t} \geq -\phi\), where \(\phi \geq 0\) is the borrowing limit.
+
+\section*{Production Sector}
+The production sector in this economy is described by a representative firm that chooses how much labor \(L\) and capital \(K\) to use in order to maximize profits. The production function is given by \(F(K,L) = A K^{\alpha} L^{1 - \alpha}\), where \(\alpha \in (0,1)\) is the output elasticity with respect to capital, and \(A\) is the level of productivity. The firm faces the following prices: the rental rate of capital \(r + \delta\) and the wage rate \(w\). The firm's problem is given by:
+
+\[
+\max_{K,L} F(K,L) - (r + \delta) K - w L.
+\]
+
+This implies standard conditions:
+
+\[
+r = \alpha A K^{\alpha - 1} L^{1 - \alpha} - \delta, \quad w = (1 - \alpha) A K^{\alpha} L^{-\alpha}.
+\]
+
+\section*{Government and Market Clearing}
+The government uses the tax revenue to finance purchases of goods \(G\):
+
+\[
+G = \int_{0}^{1} \mathcal{T}(y_{i,t}) \, di.
+\]
+
+The asset market clearing condition in this economy is given by:
+
+\[
+\int_{0}^{1} a_{i,t+1} \, di = K.
+\]
+
+The goods market clearing condition is:
+
+\[
+\int_{0}^{1} c_{i,t} \, di + G + \delta K = K^{\alpha} L^{1 - \alpha}.
+\]
+
+The labor market clears when:
+
+\[
+\int_{0}^{1} z_{i,t} \, di = L.
+\]
+
+This completes the description of the economy.
+
+\section*{Project Task}
+You will have to use the model to study the effect of a change in the degree of progressivity of the tax system from \(\lambda_{1}\) to \(\lambda_{2}\). Let \(\lambda_{1} = 0.0\) and \(\lambda_{2} = 0.15\). This means that you will have to solve the model (i.e., find the equilibrium) for both values of \(\lambda\) and compare the results. This will require some experimentation regarding, for example, the size and the curvature of the grid for assets. In this project, I do not give you the exact values for convergence criteria, grid sizes, numbers of iterations, etc. You will have to verify yourself that the results are robust to these choices.
+
+\section*{Instructions}
+Note that the model has several parameters. These are: \(\beta\), \(\gamma\), \(\tau\), \(\lambda\), \(\rho\), \(\tilde{z}\), \(\sigma\), \(\alpha\), \(\delta\), \(A\), \(\phi\). Assume \(\gamma = 2\), \(\phi = 0\).
+
+\subsection*{Step 1: Discretize the Productivity Process}
+Set \(\rho = 0.9\) and \(\sigma = 0.4\). Discretize the productivity process using Tauchen's method with 5 points and choose \(\tilde{z}\) such that the average productivity level is 1. This will guarantee that \(L = 1\) in equilibrium.
+
+\subsection*{Step 2: Set the Value of \(\alpha\)}
+Observe that the share of income that goes to labor is \(\frac{wL}{A K^{\alpha} L^{1 - \alpha}}\). This implies that this share is equal to \(1 - \alpha\). Therefore, we can set the value of \(\alpha\) using information on the labor share. Find information on the labor share in the U.S. economy and use this to set the value of \(\alpha\). You will need to provide information on where you found this data in your writeup. You can use Penn World Tables, for example.
+
+\subsection*{Step 3: Calibrate Remaining Parameters}
+The remaining parameters are \(\beta\), \(\tau\), \(\delta\), and \(A\). These four parameters will have to be pinned down by the following conditions that characterize the economy with \(\lambda = 0\):
+
+\begin{enumerate}
+    \item The interest rate \(r\) is 0.04.
+    \item The investment to output ratio is 0.2. This ratio is given by \(\frac{\delta K}{A K^{\alpha} L^{1 - \alpha}}\).
+    \item The government purchases \(G\) to output ratio is 0.2. This ratio is given by \(\frac{G}{A K^{\alpha} L^{1 - \alpha}}\).
+    \item The wage rate \(w\) is 1.
+\end{enumerate}
+
+Here are some suggestions on how to proceed. In general, when you calibrate the model (when you look for the values of the parameters), it is a good idea to start with the parameters that are easier to find. Notice that the costly part is related to solving the Bellman equation of the household. Notice the following is true for \(\lambda = 0\):
+
+\begin{enumerate}
+    \item If the wage rate is 1, then the average labor income in the economy is 1. This means that \(\bar{y} = 1\). Since the labor share in output is \(1 - \alpha\), you can use this information to find the value of output. But then it is easy to find the value of \(\tau\) using the information about the \(G\) to output ratio.
+    \item You know \(L = 1\), \(w = 1\), \(r = 0.04\). You also know \(\alpha\). Use this together with the optimality conditions of the firm and the condition that the investment to output ratio is 0.2 to find the values of \(A\) and \(\delta\). You will also get the value of \(K\).
+    \item Now you can move on to the difficult part. You know that the total asset demand of households has to equal \(K\) that you just found. And this has to be the case for \(w = 1\) and \(r = 0.04\), and the tax rate \(\tau\) you obtained. This means that you will need to find which value of \(\beta\) makes this happen.
+\end{enumerate}
+
+Now you know the values of all the parameters in the economy with \(\lambda = 0\).
+
+\section*{Comparing Economies}
+To compare it to the economy with \(\lambda = 0.15\), we will do the following. We want the government to raise the same amount of revenue (or government purchases) to output in both economies. This means that we will have to find the value of \(\tau\) that makes this happen. This will be the value of \(\tau\) in the economy with \(\lambda = 0.15\). Important: keep the values of parameters that you found for the economy with \(\lambda = 0\) fixed. These parameters were \(\beta\), \(\gamma\), \(\rho\), \(\bar{z}\), \(\sigma\), \(\alpha\), \(\delta\), \(A\), \(\phi\). But this does not mean that \(w\) and \(r\) will be the same in the economy with \(\lambda = 0.15\). This does not mean that \(K\) will be the same, nor that the average labor income will be the same. You will need to solve for the equilibrium prices that clear the markets in the economy with \(\lambda = 0.15\).
+
+\section*{Reporting Results}
+By comparing two economies, I mean that you need to report the following statistics of the stationary equilibria of the two economies:
+
+\begin{enumerate}
+    \item The equilibrium interest rate \(r\).
+    \item The equilibrium wage rate \(w\).
+    \item The tax rate \(\tau\).
+    \item The ratio of capital to output \(\frac{K}{A K^{\alpha} L^{1 - \alpha}}\).
+    \item The Gini coefficient for after-tax labor income.
+    \item The Gini coefficient for assets.
+\end{enumerate}
+
+You also need to plot:
+
+\begin{enumerate}
+    \item Value functions for both economies.
+    \item Policy functions for both economies.
+    \item The marginal distribution of assets for both economies.
+    \item The Lorenz curves for after-tax labor income and assets for both economies.
+\end{enumerate}
+
+\section*{Submission Requirements}
+You will need to provide both your code and a writeup. The writeup should be no longer than 5 pages. The writeup should show the Bellman equation and discuss how you calibrated the model parameters in detail. It should also discuss the accuracy of the numerical solution. It should contain all the results requested above and a short discussion of economic mechanisms that are at play in the model.
+
+\end{document}
