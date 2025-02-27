@@ -1,11 +1,11 @@
 
 ### MODULE 
-module Aiyagari
+module Aiyagari #module begins, it encapsulates related functions, types, constants into single namespace. Helps avoiding conflicts
 using Distributions, QuantEcon, IterTools, Plots, Optim, Interpolations, LinearAlgebra, Inequality, Statistics, ColorSchemes,PrettyTables, Roots, Revise, Parameters
 
-export FIRM, GOVT, HAProblem
-export Tσ_operator, T_operator, opi
-export get_transition, stationary_distribution_hh, solve_hh_block, get_aggregate_labor, solve_firm
+export FIRM, GOVT, HAProblem #defined below
+export Tσ_operator, T_operator, opi #defined below
+export get_transition, stationary_distribution_hh, solve_hh_block, get_aggregate_labor, solve_firm #defined below
 
 
 

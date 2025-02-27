@@ -3,8 +3,9 @@
 using Distributions, QuantEcon, IterTools, Plots, Optim, Interpolations, LinearAlgebra, Inequality, Statistics, ColorSchemes,PrettyTables, Roots, Revise, Parameters
 
 ### LOAD MODULE 
-includet("aiyagari_module.jl")
-using .Aiyagari
+includet("aiyagari_module.jl") #Revise package
+#includet -> changes to module file will automatically be reflected in this main file w/o restarting Julia 
+using .Aiyagari #importing module Aiyagari (defined in aiyagari_module.jl) and all its functions, types etc.
 
 # access to all exported functions
 hh = HAProblem()

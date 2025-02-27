@@ -1,3 +1,6 @@
+#Hugget General equilibrium (prices r,w determined endogeneously)
+
+
 # load some packages we will need today
 
 using Distributions, QuantEcon, IterTools, Optim, Interpolations, LinearAlgebra, Inequality, Statistics, ColorSchemes,PrettyTables, Plots, Parameters, Roots

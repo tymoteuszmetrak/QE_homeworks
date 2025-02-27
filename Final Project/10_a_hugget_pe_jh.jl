@@ -1,3 +1,6 @@
+#Hugget Partial equilibrium: hholds optimize and take prices r,w as given (determined exogeneously)
+
+
 # load some packages we will need today
 
 using Distributions, QuantEcon, IterTools, Optim, Interpolations, LinearAlgebra, Inequality, Statistics, ColorSchemes,PrettyTables, Plots, Parameters
