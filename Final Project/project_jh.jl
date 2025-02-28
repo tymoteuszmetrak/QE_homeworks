@@ -5,9 +5,6 @@ using Inequality, LaTeXStrings, BenchmarkTools, LoopVectorization
 
 
 
-
-
-
 @with_kw struct FIRM
     α = 0.4 # capital share (USA 2019 labor share = 0.6: Penn World Table 10.01)
     δ = 0.04 # depreciation rate
@@ -16,7 +13,6 @@ using Inequality, LaTeXStrings, BenchmarkTools, LoopVectorization
     F_K =  (K,L) ->  α * Z * K^(α-1) * L^(1-α) # marginal product of capital
     F_L =  (K,L) -> (1-α) * Z * K^α * L^(-α) # marginal product of labor
 end
-
 
 
 function solve_firm(firm,r)
@@ -35,17 +31,16 @@ end
 
 @with_kw struct GOVT
     τ_w = 1/3 # labor tax #DO POPRAWY
-    
+    lambda = 0.0 #DO POPRAWY (in write_up: λ)   
 end
 
 function get_G(L, prices, government) #DO POPRAWY
     @unpack r, w = prices
-    @unpack τ_w = government
+    @unpack τ_w, lambda = government
     G = τ_w * w * L
     return G
 end
 
-σ
 
 @with_kw struct HAProblem
 
@@ -55,7 +50,7 @@ end
     γ = 2 # curvature parameter of utility function
     u = γ == 1 ? x -> log(x) : x -> (x^(1 - γ) - 1) / (1 - γ) # utility function
     ϕ = 0.0 # borrowing constraint
-    β = 0.9664 # discount factor DO POPRAWY, poza tym dodać lambda
+    β = 0.9664 # discount factor DO POPRAWY
     N_z = 5 # grid size for Tauchen
     mc_z = tauchen(N_z, ρ_z, ν_z, ln_z_tilde)
     λ_z = stationary_distributions(mc_z)[1]
@@ -83,7 +78,7 @@ function Tσ_operator(v,σ_ind,model,prices,taxes)
 
     @unpack  N_z, z_vec, P_z, β, a_vec, N_a, u = model
     @unpack  r, w = prices
-    @unpack τ_w = taxes
+    @unpack τ_w, lambda = taxes
     v_new = similar(v)
     for (z_ind, z) in enumerate(z_vec) # loop over productivity
         for (a_ind, a) in enumerate(a_vec) # loop over assets today
@@ -103,7 +98,7 @@ function T_operator(v,model,prices,taxes)
 
     @unpack  N_z, z_vec, P_z, β, a_vec, N_a, u = model
     @unpack  r, w  = prices
-    @unpack τ_w = taxes
+    @unpack τ_w, lambda = taxes
     v_new   = zeros(Float64,N_a,N_z)
     σ       = zeros(Float64,N_a,N_z)
     σ_ind   = ones(Int,N_a,N_z)
@@ -171,22 +166,22 @@ end
 
 function stationary_distribution_hh(model, σ_ind)
 
-Q = get_transition(model, σ_ind)
+    Q = get_transition(model, σ_ind)
 
-@unpack N_a, N_z, z_vec = model
+    @unpack N_a, N_z, z_vec = model
 
-λ_vector = (Q^10000)[1,:]
-λ = zeros(N_a, N_z)
+    λ_vector = (Q^10000)[1,:]
+    λ = zeros(N_a, N_z)
 
-for (j, z) in enumerate(z_vec)
-    for (j, z′) in enumerate(z_vec)
-        λ[:,j] = λ_vector[(j-1)*N_a+1:j*N_a]
+    for (j, z) in enumerate(z_vec)
+        for (j, z′) in enumerate(z_vec)
+            λ[:,j] = λ_vector[(j-1)*N_a+1:j*N_a]
+        end
     end
-end
 
-λ_a = sum(λ,dims=2)
-λ_z = sum(λ,dims=1)'
-return λ, λ_vector, λ_a, λ_z
+    λ_a = sum(λ,dims=2)
+    λ_z = sum(λ,dims=1)'
+    return λ, λ_vector, λ_a, λ_z
 end
 
 function solve_hh_block(model, prices, taxes)
@@ -234,7 +229,7 @@ hh = HAProblem()
 
 # try to see if it works as intended
 prices = (r=0.04, w=1.0)
-taxes  = (τ_w = 1/3)
+taxes  = (τ_w = 1/3, lambda = 0.0)
 
 
 v_opi, σ_opi,σ_ind_opi,iter_opi,error_opi, λ, λ_vector, λ_a, λ_z, A′ = solve_hh_block(hh,prices,taxes)
@@ -256,16 +251,16 @@ println("error in VFI = $error_opi")
 # now do the example of the full thing
 
     firm = FIRM()
-    govt = GOVT(τ_w = 1/3)
+    govt = GOVT(τ_w = 1/3, lambda = 0.0)
     L = get_aggregate_labor(hh)
 
-    r_init = 0.0
+    r_init = 0.04
     K_L, w = solve_firm(firm,r_init)
     K = K_L * L
     asset_supply = K
     
     prices = (r=r_init, w=w)
-    taxes = (τ_w = govt.τ_w)
+    taxes = (τ_w = govt.τ_w, lambda = govt.lambda)
 
     function asset_demand(hh,prices,taxes)
         v_opi, σ_opi,σ_ind_opi,iter_opi,error_opi, λ, λ_vector, λ_a, λ_z, A′  = solve_hh_block(hh,prices, taxes)
@@ -274,7 +269,7 @@ println("error in VFI = $error_opi")
 
     asset_demand(hh,prices,taxes)
 
-    excess_demand = asset_demand(hh,prices,taxes) - asset_supply
+    excess_demand = asset_demand(hh,prices,taxes) - asset_supply #DO POPRAWY 141 wychodzi - to dużo, tak ma być?
 
 # put all pieces together
     function aiyagari_residual(r,hh,govt,firm)
@@ -284,7 +279,7 @@ println("error in VFI = $error_opi")
         K = K_L * L
         asset_supply = K
         prices = (r=r, w=w)
-        taxes = (τ_w = govt.τ_w)
+        taxes = (τ_w = govt.τ_w, lambda = govt.lambda)
         residual = asset_demand(hh,prices,taxes) - asset_supply
 
         return residual
@@ -298,7 +293,7 @@ println("error in VFI = $error_opi")
 # plot 
 
 
-    grid_r = LinRange(-0.02,0.00,15)
+    grid_r = LinRange(-0.02,0.1,15)
     excess_asset_demand = zeros(length(grid_r))
     for (ind_r,r_guess) in enumerate(grid_r)
         excess = aiyagari_residual(r_guess,hh,govt,firm)
@@ -308,7 +303,7 @@ println("error in VFI = $error_opi")
 
 
 # solve for an equilibrium return 
-    r_star = find_zero(x -> aiyagari_residual(x,hh,govt,firm), (-0.02, 0.0 ) ,verbose = true, maxiter = 10)
+    r_star = find_zero(x -> aiyagari_residual(x,hh,govt,firm), (-0.02, 0.1) ,verbose = true, maxiter = 10)
     println("equilibrium real rate = $r_star")
     display("Aggregate excess asset demand $(aiyagari_residual(r_star,hh,govt,firm))") # note - does not clear fully because of the grid 
  

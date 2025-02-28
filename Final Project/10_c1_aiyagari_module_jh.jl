@@ -174,22 +174,22 @@ end
 
 function stationary_distribution_hh(model, σ_ind)
 
-Q = get_transition(model, σ_ind)
+    Q = get_transition(model, σ_ind)
 
-@unpack N_a, N_z, z_vec = model
+    @unpack N_a, N_z, z_vec = model
 
-λ_vector = (Q^10000)[1,:]
-λ = zeros(N_a, N_z)
+    λ_vector = (Q^10000)[1,:]
+    λ = zeros(N_a, N_z)
 
-for (j, z) in enumerate(z_vec)
-    for (j, z′) in enumerate(z_vec)
-        λ[:,j] = λ_vector[(j-1)*N_a+1:j*N_a]
+    for (j, z) in enumerate(z_vec)
+        for (j, z′) in enumerate(z_vec)
+            λ[:,j] = λ_vector[(j-1)*N_a+1:j*N_a]
+        end
     end
-end
 
-λ_a = sum(λ,dims=2)
-λ_z = sum(λ,dims=1)'
-return λ, λ_vector, λ_a, λ_z
+    λ_a = sum(λ,dims=2)
+    λ_z = sum(λ,dims=1)'
+    return λ, λ_vector, λ_a, λ_z
 end
 
 function solve_hh_block(model, prices, taxes)
