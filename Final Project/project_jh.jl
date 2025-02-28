@@ -1,19 +1,17 @@
 
-### MODULE 
-module Aiyagari #module begins, it encapsulates related functions, types, constants into single namespace. Helps avoiding conflicts
-using Distributions, QuantEcon, IterTools, Plots, Optim, Interpolations, LinearAlgebra, Inequality, Statistics, ColorSchemes,PrettyTables, Roots, Revise, Parameters
 
-export FIRM, GOVT, HAProblem #defined below
-export Tσ_operator, T_operator, opi #defined below
-export get_transition, stationary_distribution_hh, solve_hh_block, get_aggregate_labor, solve_firm #defined below
+using Distributions, QuantEcon, IterTools, Plots, Optim, Interpolations, LinearAlgebra, Inequality, Statistics, ColorSchemes,PrettyTables, Roots, Revise, Parameters
+using Inequality, LaTeXStrings, BenchmarkTools, LoopVectorization
+
+
 
 
 
 
 @with_kw struct FIRM
-    α = 1/3 # capital share
-    δ = 0.1 # depreciation rate
-    Z = 1 # productivity
+    α = 0.4 # capital share (USA 2019 labor share = 0.6: Penn World Table 10.01)
+    δ = 0.04 # depreciation rate
+    Z = 0.7137 #TFP (in write-up: A)
     F   =  (K,L) ->  Z * K^α * L^(1-α) # production function
     F_K =  (K,L) ->  α * Z * K^(α-1) * L^(1-α) # marginal product of capital
     F_L =  (K,L) -> (1-α) * Z * K^α * L^(-α) # marginal product of labor
@@ -22,13 +20,13 @@ end
 
 
 function solve_firm(firm,r)
-    @unpack α, δ, F, F_K, F_L = firm
-    K_L = (α/(r+δ))^(1/(1-α)) # capital to output ratio; numerator: α*Z if Z =/= 1
-    w = F_L(K_L,1) # wage
+    @unpack α, δ, Z, F, F_K, F_L = firm
+    K_L = ((α*Z)/(r+δ))^(1/(1-α)) # capital to output ratio
+    w = F_L(K_L,1) # wage, L normalized to 1
     return K_L, w
 end
 
-function get_aggregate_labor(ha_block) #slide 19
+function get_aggregate_labor(ha_block)
     @unpack N_z, z_vec, λ_z = ha_block
     L =  sum(z_vec .* λ_z)
     return L
@@ -36,38 +34,37 @@ end
 
 
 @with_kw struct GOVT
-    τ_w = 0.1 # labor tax
-    τ_r = 0.1 # capital tax
-    d = 0.0 # lump-sum transfer
-    B = 0.0 # debt
+    τ_w = 1/3 # labor tax #DO POPRAWY
+    
 end
 
-function get_G(L, A, prices, government)
+function get_G(L, prices, government) #DO POPRAWY
     @unpack r, w = prices
-    @unpack τ_w, τ_r, d, B = government
-    G = τ_w * w * L + τ_r * r * A - d - r * B
+    @unpack τ_w = government
+    G = τ_w * w * L
     return G
 end
 
-
+σ
 
 @with_kw struct HAProblem
 
-    ρ_z=0.96 #persistence of log productivity
-    ν_z=sqrt(0.125) #std of log productivity
+    ρ_z = 0.9 # persistence of log productivity (in write-up := ρ)
+    ν_z = 0.4 # std of log productivity (in write-up := σ)
+    ln_z_tilde = -8.0/19.0 #z_tilde = e^(-8/19) := constant normalizing average productivity to 1
     γ = 2 # curvature parameter of utility function
     u = γ == 1 ? x -> log(x) : x -> (x^(1 - γ) - 1) / (1 - γ) # utility function
     ϕ = 0.0 # borrowing constraint
-    β = 0.96 # discount factor
+    β = 0.9664 # discount factor DO POPRAWY, poza tym dodać lambda
     N_z = 5 # grid size for Tauchen
-    mc_z = tauchen(N_z, ρ_z, ν_z, 0)
+    mc_z = tauchen(N_z, ρ_z, ν_z, ln_z_tilde)
     λ_z = stationary_distributions(mc_z)[1]
     P_z = mc_z.p # transition matrix
 
     
     z_vec = exp.(mc_z.state_values) / sum(exp.(mc_z.state_values) .* λ_z) # normalize so that mean is 1
 
-    a_max  = 150 # maximum assets
+    a_max  = 150 # maximum assets DO POPRAWY: ewentualnie np. 2*K
     N_a    = 150 # assets grid 
 
    
@@ -82,11 +79,11 @@ end
 
 
 
-function Tσ_operator(v,σ_ind,model,prices,taxes )
+function Tσ_operator(v,σ_ind,model,prices,taxes)
 
     @unpack  N_z, z_vec, P_z, β, a_vec, N_a, u = model
     @unpack  r, w = prices
-    @unpack τ_w, τ_r, d = taxes
+    @unpack τ_w = taxes
     v_new = similar(v)
     for (z_ind, z) in enumerate(z_vec) # loop over productivity
         for (a_ind, a) in enumerate(a_vec) # loop over assets today
@@ -94,7 +91,7 @@ function Tσ_operator(v,σ_ind,model,prices,taxes )
     
             a_next_ind  = σ_ind[a_ind,z_ind]    
             a_next      = a_vec[a_next_ind]
-            v_new[a_ind,z_ind]   = u((1-τ_r)*(1+r)*a + (1-τ_w)*w*z - a_next + d) + β * sum( v[a_next_ind,z_next_ind] * P_z[z_ind,z_next_ind] for z_next_ind in 1:N_z )
+            v_new[a_ind,z_ind]   = u((1+r)*a + (1-τ_w)*w*z - a_next) + β * sum( v[a_next_ind,z_next_ind] * P_z[z_ind,z_next_ind] for z_next_ind in 1:N_z ) #DO POPRAWY - ŻEBY PASOWAŁO TEŻ DLA lambda = 0.15
         end
     end
            
@@ -102,11 +99,11 @@ function Tσ_operator(v,σ_ind,model,prices,taxes )
 
 end
 
-function T_operator(v,model,prices, taxes)
+function T_operator(v,model,prices,taxes)
 
     @unpack  N_z, z_vec, P_z, β, a_vec, N_a, u = model
     @unpack  r, w  = prices
-    @unpack τ_w, τ_r, d = taxes
+    @unpack τ_w = taxes
     v_new   = zeros(Float64,N_a,N_z)
     σ       = zeros(Float64,N_a,N_z)
     σ_ind   = ones(Int,N_a,N_z)
@@ -117,7 +114,7 @@ function T_operator(v,model,prices, taxes)
             reward = zeros(N_a)
 
             for (a_next_ind, a_next) in enumerate(a_vec) # loop over assets tomorrow
-                c = (1-τ_r)*(1+r)*a + (1-τ_w)*w*z + d - a_next
+                c = (1+r)*a + (1-τ_w)*w*z - a_next
                 util = c > 0 ? u(c) : -Inf
                 reward[a_next_ind]   = util + β * sum( v[a_next_ind,z_next_ind] * P_z[z_ind,z_next_ind] for z_next_ind in 1:N_z )
             end
@@ -232,5 +229,86 @@ function solve_hh_block(model,prices)
 end
 
 
-end # module ends
+# access to all exported functions
+hh = HAProblem()
 
+# try to see if it works as intended
+prices = (r=0.04, w=1.0)
+taxes  = (τ_w = 1/3)
+
+
+v_opi, σ_opi,σ_ind_opi,iter_opi,error_opi, λ, λ_vector, λ_a, λ_z, A′ = solve_hh_block(hh,prices,taxes)
+
+
+println("error in VFI = $error_opi")
+
+
+# test plotting
+    lines_scheme = [get(ColorSchemes.thermal,LinRange(0.0,1.0,hh.N_z));];
+    value_plot = plot(xlabel = "a", ylabel = "V", title = "Value function");
+
+
+    for j in 1:hh.N_z
+        plot!(hh.a_vec, v_opi[:,j], label = false, color = lines_scheme[j], lw=3)
+    end
+    value_plot
+
+# now do the example of the full thing
+
+    firm = FIRM()
+    govt = GOVT(τ_w = 1/3)
+    L = get_aggregate_labor(hh)
+
+    r_init = 0.0
+    K_L, w = solve_firm(firm,r_init)
+    K = K_L * L
+    asset_supply = K
+    
+    prices = (r=r_init, w=w)
+    taxes = (τ_w = govt.τ_w)
+
+    function asset_demand(hh,prices,taxes)
+        v_opi, σ_opi,σ_ind_opi,iter_opi,error_opi, λ, λ_vector, λ_a, λ_z, A′  = solve_hh_block(hh,prices, taxes)
+        return A′
+    end
+
+    asset_demand(hh,prices,taxes)
+
+    excess_demand = asset_demand(hh,prices,taxes) - asset_supply
+
+# put all pieces together
+    function aiyagari_residual(r,hh,govt,firm)
+        
+        L = get_aggregate_labor(hh)
+        K_L, w = solve_firm(firm,r)
+        K = K_L * L
+        asset_supply = K
+        prices = (r=r, w=w)
+        taxes = (τ_w = govt.τ_w)
+        residual = asset_demand(hh,prices,taxes) - asset_supply
+
+        return residual
+    end
+
+# test 
+
+    r_guess = 0.01
+    aiyagari_residual(r_guess,hh,govt,firm)
+
+# plot 
+
+
+    grid_r = LinRange(-0.02,0.00,15)
+    excess_asset_demand = zeros(length(grid_r))
+    for (ind_r,r_guess) in enumerate(grid_r)
+        excess = aiyagari_residual(r_guess,hh,govt,firm)
+        excess_asset_demand[ind_r] = excess
+    end
+    plot(excess_asset_demand,grid_r,label="Excess Asset Demand",ylabel="Rate",xlabel="Assets",legend=:bottomright,linewidth=3)
+
+
+# solve for an equilibrium return 
+    r_star = find_zero(x -> aiyagari_residual(x,hh,govt,firm), (-0.02, 0.0 ) ,verbose = true, maxiter = 10)
+    println("equilibrium real rate = $r_star")
+    display("Aggregate excess asset demand $(aiyagari_residual(r_star,hh,govt,firm))") # note - does not clear fully because of the grid 
+ 

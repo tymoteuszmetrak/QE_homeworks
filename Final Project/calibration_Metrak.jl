@@ -12,7 +12,7 @@ using Roots
 ρ = 0.9       # Persistence parameter
 σ = 0.4       # Standard deviation of the shock
 N_z = 5       # Number of grid points for productivity
-μ_z = 0.0     # Mean of the log productivity process (to be normalized)
+μ_z = -8/19     # Mean of the log productivity process (ln_z_tilde)
 
 # Discretize the AR(1) process using Tauchen's method
 mc_z = tauchen(N_z, ρ, σ, μ_z)
@@ -63,11 +63,11 @@ govt_to_output_ratio = 0.2
 # Step 3.1: Solve for G and τ
 # I can do it analytically on the piece of paper
 # 1-alpha = 0.6; output 1/0.6 = 5/3; G = 0.2*output -> G = 1/3;  
-# for λ = 0; G = τ*y_dashed, but since y_dashed is 1 and G is 1/3, that implies tau = 1/3
+# for λ = 0; G = τ*y_bar, but since y_bar is 1 and G is 1/3, that implies τ = 1/3
 G = 1/3
 τ = 1/3
     
-println("Goverment expenditure (G): ", G)
+println("Government expenditure (G): ", G)
 println("Tax rate (τ): ", τ)
 
 # Step 3.2: Solve for A, δ, and K
