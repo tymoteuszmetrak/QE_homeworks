@@ -6,12 +6,12 @@ using Inequality, LaTeXStrings, BenchmarkTools, LoopVectorization
 
 
 @with_kw struct FIRM
-    α = 0.4 # capital share (USA 2019 labor share = 0.6: Penn World Table 10.01)
-    δ = 0.04 # depreciation rate
-    Z = 0.7137 #TFP (in write-up: A)
-    F   =  (K,L) ->  Z * K^α * L^(1-α) # production function
-    F_K =  (K,L) ->  α * Z * K^(α-1) * L^(1-α) # marginal product of capital
-    F_L =  (K,L) -> (1-α) * Z * K^α * L^(-α) # marginal product of labor
+    α = 0.4    # capital share (USA 2019 labor share = 0.6: Penn World Table 10.01)
+    δ = 0.04   # depreciation rate
+    A = 0.7137 # TFP
+    F   =  (K,L) ->  A * K^α * L^(1-α) # production function
+    F_K =  (K,L) ->  α * A * K^(α-1) * L^(1-α) - δ # marginal product of capital
+    F_L =  (K,L) -> (1-α) * A * K^α * L^(-α) # marginal product of labor
 end
 
 
@@ -30,14 +30,23 @@ end
 
 
 @with_kw struct GOVT
-    τ_w = 1/3 # labor tax #DO POPRAWY
-    lambda = 0.0 #DO POPRAWY (in write_up: λ)   
+    τ_w = 1/3 # labour tax
+    lambda = 0.0 # progressivity of the tax parameter 
 end
 
-function get_G(L, prices, government) #DO POPRAWY
+function get_G(L, prices, government, avg_income) # Tutaj potrzebny avg_income
     @unpack r, w = prices
     @unpack τ_w, lambda = government
-    G = τ_w * w * L
+
+    # Compute pre-tax labor income
+    y = L * w  
+
+    # Apply the progressive tax function
+    tax = y - (1 - τ_w) * (y / avg_income)^(1 - lambda) * avg_income
+
+    # Compute total government revenue
+    G = tax * L  # Integrating over all workers since L = 1 in equilibrium
+
     return G
 end
 
