@@ -358,9 +358,16 @@ excess_demand(0.042, 1.39, hh2, govt, firm) # (0.5179400082338992, 0.0)
 excess_demand(0.039, 1.39, hh2, govt, firm) # (-0.27975398100741344, 0.0)
 excess_demand(0.038, 1.39, hh2, govt, firm) # (-0.5557510240672396, 0.0)
 
+v_opi, σ_opi, σ_ind_opi, iter_opi, error_opi, λ, λ_vector, λ_a, λ_z, A′ = solve_hh_block(hh2, prices, govt)
+A′
+# Capital:
+K_final = A′- (-0.0027741694749590096)
+println("Capital = $K_final")
+
 # We may assume that optimal w and r are as follows
 # r = 0.04
 # w = 1.39
+# K = 6.63 (approximately)
 
 ##################################################################################
 
