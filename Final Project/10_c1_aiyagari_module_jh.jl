@@ -203,24 +203,24 @@ end
 
 function show_statistics(ha_block,grid,λ_a,λ_z)
 # warning - this can be misleading if we allow for negative values!
-lorenz_a_pop,lorenz_a_share=lorenz_curve(grid.a_vec,vec(λ_a))
-lorenz_z_pop,lorenz_z_share=lorenz_curve(ha_block.z_vec,vec(λ_z))
+    lorenz_a_pop,lorenz_a_share=lorenz_curve(grid.a_vec,vec(λ_a))
+    lorenz_z_pop,lorenz_z_share=lorenz_curve(ha_block.z_vec,vec(λ_z))
 
 
 
-lorenz_a = LinearInterpolation(lorenz_a_pop, lorenz_a_share);
-lorenz_z = LinearInterpolation(lorenz_z_pop, lorenz_z_share);
+    lorenz_a = LinearInterpolation(lorenz_a_pop, lorenz_a_share);
+    lorenz_z = LinearInterpolation(lorenz_z_pop, lorenz_z_share);
 
 
-header = (["", "Assets", "Income"])
+    header = (["", "Assets", "Income"])
 
-data = [           
-                     "Bottom 50% share"         lorenz_a(0.5)        lorenz_z(0.5)    ;
-                     "Top 10% share"            1-lorenz_a(0.9)         1-lorenz_z(0.9)     ;
-                     "Top 1% share"             1-lorenz_a(0.99)        1-lorenz_z(0.99)    ;  
-                     "Gini Coefficient"      wgini(grid.a_vec,vec(max.(0,λ_a)))      wgini(ha_block.z_vec,vec(max.(0.0,λ_z)))    ;]
+    data = [           
+                        "Bottom 50% share"         lorenz_a(0.5)        lorenz_z(0.5)    ;
+                        "Top 10% share"            1-lorenz_a(0.9)         1-lorenz_z(0.9)     ;
+                        "Top 1% share"             1-lorenz_a(0.99)        1-lorenz_z(0.99)    ;  
+                        "Gini Coefficient"      wgini(grid.a_vec,vec(max.(0,λ_a)))      wgini(ha_block.z_vec,vec(max.(0.0,λ_z)))    ;]
 
-return pretty_table(data;header=header,formatters=ft_printf("%5.3f",2:3))
+    return pretty_table(data;header=header,formatters=ft_printf("%5.3f",2:3))
 end
 
 function solve_hh_block(model,prices)
