@@ -10,13 +10,13 @@ using Inequality, LaTeXStrings, BenchmarkTools, LoopVectorization
     δ = 0.04   # depreciation rate
     A = 0.7137 # TFP
     F   =  (K,L) ->  A * K^α * L^(1-α) # production function
-    F_K =  (K,L) ->  α * A * K^(α-1) * L^(1-α) - δ # marginal product of capital
+    F_K =  (K,L) ->  α * A * K^(α-1) * L^(1-α) # marginal product of capital
     F_L =  (K,L) -> (1-α) * A * K^α * L^(-α) # marginal product of labor
 end
 
 
 function solve_firm(firm,r)
-    @unpack α, δ, Z, F, F_K, F_L = firm
+    @unpack α, δ, A, F, F_K, F_L = firm
     K_L = ((α*Z)/(r+δ))^(1/(1-α)) # capital to output ratio
     w = F_L(K_L,1) # wage, L normalized to 1
     return K_L, w
