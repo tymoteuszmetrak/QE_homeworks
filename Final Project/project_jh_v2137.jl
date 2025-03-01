@@ -333,7 +333,53 @@ firm = FIRM()
 
 
 
+# Generalize solving to compare economies
+function solve_equilibrium(lambda)
+    firm = FIRM()
+    govt = GOVT(τ_w = 1/3, lambda = lambda) # to be changed when new tau found
+    L = get_aggregate_labor(hh)
+    
+    function residual_function(r)
+        return aiyagari_residual(r, hh, govt, firm)
+    end
+    
+    # Find equilibrium interest rate
+    r_star = find_zero(residual_function, (-0.02, 0.1), verbose=true, maxiter=10)
+    
+    # Solve for equilibrium wages and capital-output ratio
+    K_L, w = solve_firm(firm, r_star)
+    K = K_L * L
+    prices = (r=r_star, w=w)
+    taxes = (τ_w = govt.τ_w, lambda = govt.lambda)
+    
+    # Solve household block
+    v_opi, σ_opi, σ_ind_opi, iter_opi, error_opi, λ, λ_vector, λ_a, λ_z, A′ = solve_hh_block(hh, prices, taxes)
+    
+    # Compute Gini coefficients
+    gini_income = wgini(hh.z_vec, vec(max.(0.0, λ_z)))
+    gini_assets = wgini(hh.a_vec, vec(max.(0.0, λ_a)))
+    
+    return (r_star, w, K_L, gini_income, gini_assets)
+end
 
+# Solve for lambda = 0 and lambda = 0.15
+results_0 = solve_equilibrium(0.0)
+results_15 = solve_equilibrium(0.15)
+
+# Print and compare results
+println("Comparison of Equilibria:")
+header = ["Variable", "Lambda = 0", "Lambda = 0.15"]
+data = [
+    "Equilibrium Interest Rate" results_0[1] results_15[1];
+    "Equilibrium Wage Rate" results_0[2] results_15[2];
+    "Capital-Output Ratio (K/Y)" results_0[3] results_15[3];
+    "Gini Coefficient (After-Tax Labor Income)" results_0[4] results_15[4];
+    "Gini Coefficient (Assets)" results_0[5] results_15[5];
+]
+
+pretty_table(data; header=header, formatters=ft_printf("%5.3f", 2:3))
+
+# Add plots for another comparison 
 
 
 
