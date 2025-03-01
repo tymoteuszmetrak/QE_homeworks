@@ -418,3 +418,65 @@ pretty_table(data; header=header, formatters=ft_printf("%5.3f", 2:3))
     println("equilibrium real rate = $r_star")
     display("Aggregate excess asset demand $(aiyagari_residual(r_star,hh,govt,firm))") # note - does not clear fully because of the grid 
  
+
+##################################################################################
+
+
+
+# Generalize solving to compare economies
+
+function compute_equilibrium(firm, govt, hh, r)
+    K_L, w = solve_firm(firm, r)
+    L = get_aggregate_labor(hh)
+    K = K_L * L
+    prices = (r=r, w=w)   # Use a named tuple instead of a regular tuple
+    G = get_G(L, prices, govt)
+    v_opi, σ_opi, σ_ind_opi, iter_opi, error_opi, λ, λ_vector, λ_a, λ_z, A′ = solve_hh_block(hh, prices, (τ_w=govt.τ_w, lambda=govt.lambda))
+    
+    gini_income = wgini(hh.z_vec, vec(max.(0.0, λ_z)))
+    gini_assets = wgini(hh.a_vec, vec(max.(0, λ_a)))
+    
+    return (r=r, w=w, tax_rate=govt.τ_w, K_to_output=K / (firm.Z * K^firm.α * L^(1 - firm.α)), gini_income=gini_income, gini_assets=gini_assets)
+end
+
+# Solve for lambda = 0 and lambda = 0.15
+firm = FIRM()# firm problem
+govt1 = GOVT(τ_w=1/3, lambda=0.0) # government with no progressive taxation
+hh1 = HAProblem() # solve household problem 
+
+v_opi, σ_opi,σ_ind_opi,iter_opi,error_opi, λ, λ_vector, λ_a, λ_z, A′ = solve_hh_block(hh,prices,taxes)
+eq1 = compute_equilibrium(firm, govt1, hh1, 0.04)
+
+
+# Policy function
+plot(hh.a_vec, σ_opi[:, 1], label="Policy Function (low z)")
+plot!(hh.a_vec, σ_opi[:, end], label="Policy Function (high z)")
+title!("Policy Functions")
+xlabel!("Assets")
+ylabel!("Next Period Assets")
+display(plot!())
+    
+# Value function
+plot(hh.a_vec, v_opi[:, 1], label="Value Function (low z)")
+plot!(hh.a_vec, v_opi[:, end], label="Value Function (high z)")
+title!("Value Functions")
+xlabel!("Assets")
+ylabel!("Value")
+display(plot!())
+    
+# Asset distribution
+histogram(hh.a_vec, weights=vec(λ_a), normalize=true, bins=50, label="Asset Distribution")
+title!("Marginal Distribution of Assets")
+xlabel!("Assets")
+ylabel!("Density")
+display(plot!())
+    
+# Lorenz curves
+lorenz_assets = lorenz_curve(hh.a_vec, vec(λ_a))
+lorenz_income = lorenz_curve(hh.z_vec, vec(λ_z))
+plot(lorenz_assets[1], lorenz_assets[2], label="Lorenz Curve (Assets)")
+plot!(lorenz_income[1], lorenz_income[2], label="Lorenz Curve (Income)")
+title!("Lorenz Curves")
+xlabel!("Cumulative Population Share")
+ylabel!("Cumulative Wealth/Income Share")
+display(plot!())
