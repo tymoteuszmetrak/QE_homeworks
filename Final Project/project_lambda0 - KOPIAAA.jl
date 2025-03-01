@@ -33,6 +33,12 @@ end
     lambda = 0.0 #DO POPRAWY (in write_up: λ)   
 end
 
+function get_G(L, prices, government) #DO POPRAWY
+    @unpack r, w = prices
+    @unpack τ_w, lambda = government
+    G = τ_w * w * L
+    return G
+end
 
 
 @with_kw struct HAProblem
@@ -81,7 +87,7 @@ function Tσ_operator(v,σ_ind,model,prices,taxes)
     
             a_next_ind  = σ_ind[a_ind,z_ind]    
             a_next      = a_vec[a_next_ind]
-            v_new[a_ind,z_ind]   = u((1+r)*a + (1-τ_w)*w*(z^(1-lambda)) - a_next) + β * sum( v[a_next_ind,z_next_ind] * P_z[z_ind,z_next_ind] for z_next_ind in 1:N_z ) #DO POPRAWY - ŻEBY PASOWAŁO TEŻ DLA lambda = 0.15
+            v_new[a_ind,z_ind]   = u((1+r)*a + (1-τ_w)*w*z - a_next) + β * sum( v[a_next_ind,z_next_ind] * P_z[z_ind,z_next_ind] for z_next_ind in 1:N_z ) #DO POPRAWY - ŻEBY PASOWAŁO TEŻ DLA lambda = 0.15
         end
     end
            
@@ -104,7 +110,7 @@ function T_operator(v,model,prices,taxes)
             reward = zeros(N_a)
 
             for (a_next_ind, a_next) in enumerate(a_vec) # loop over assets tomorrow
-                c = (1+r)*a + (1-τ_w)*w*(z^(1-lambda)) - a_next
+                c = (1+r)*a + (1-τ_w)*w*z - a_next
                 util = c > 0 ? u(c) : -Inf
                 reward[a_next_ind]   = util + β * sum( v[a_next_ind,z_next_ind] * P_z[z_ind,z_next_ind] for z_next_ind in 1:N_z )
             end
@@ -249,40 +255,8 @@ firm = FIRM()
 govt = GOVT(τ_w = 1/3, lambda = 0.0)
 
 
+
 residual_beta(0.9340109) #0.00467227784140789, found by trial and error, no tested findzero and nsolve algos did not work properly
-
-
-##################################################################################
-
-#############################REMAINING PARTS FOR lambda = 0.15
-
-#FINDING tax rate for lambda = 0.15 
-τ_w2 = 1 - (2/3) * sum(hh.λ_z .* hh.z_vec.^0.85) #0.85 = 1 - 0.15; G/Y at constant 0.2
-
-
-#finding equilibrium prices for prices for lambda = 0.15 and corresponding τ_w2
-
-
-
-hh2 = HAProblem(β = 0.9340109) #updated Beta, which sets excess demand close to 0
-taxes2  = (τ_w = τ_w2, lambda = 0.15)
-
-
-
-##################################################################################
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -334,87 +308,4 @@ pretty_table(data; header=header, formatters=ft_printf("%5.3f", 2:3))
 
 # Add plots for another comparison 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-################################################3
-# test plotting
-    lines_scheme = [get(ColorSchemes.thermal,LinRange(0.0,1.0,hh.N_z));];
-    value_plot = plot(xlabel = "a", ylabel = "V", title = "Value function");
-
-
-    for j in 1:hh.N_z
-        plot!(hh.a_vec, v_opi[:,j], label = false, color = lines_scheme[j], lw=3)
-    end
-    value_plot
-
-# now do the example of the full thing
-
-    firm = FIRM()
-    govt = GOVT(τ_w = 1/3, lambda = 0.0)
-    L = get_aggregate_labor(hh)
-
-    r_init = 0.04
-    K_L, w = solve_firm(firm,r_init)
-    K = K_L * L
-    asset_supply = K
-    
-    prices = (r=r_init, w=w)
-    taxes = (τ_w = govt.τ_w, lambda = govt.lambda)
-
-    function asset_demand(hh,prices,taxes)
-        v_opi, σ_opi,σ_ind_opi,iter_opi,error_opi, λ, λ_vector, λ_a, λ_z, A′  = solve_hh_block(hh,prices, taxes)
-        return A′
-    end
-
-    asset_demand(hh,prices,taxes)
-
-    excess_demand = asset_demand(hh,prices,taxes) - asset_supply #DO POPRAWY 141 wychodzi - to dużo, tak ma być?
-
-# put all pieces together
-    function aiyagari_residual(r,hh,govt,firm)
-        
-        L = get_aggregate_labor(hh)
-        K_L, w = solve_firm(firm,r)
-        K = K_L * L
-        asset_supply = K
-        prices = (r=r, w=w)
-        taxes = (τ_w = govt.τ_w, lambda = govt.lambda)
-        residual = asset_demand(hh,prices,taxes) - asset_supply
-
-        return residual
-    end
-
-# test 
-
-    r_guess = 0.01
-    aiyagari_residual(r_guess,hh,govt,firm)
-
-# plot 
-
-
-    grid_r = LinRange(-0.02,0.1,15)
-    excess_asset_demand = zeros(length(grid_r))
-    for (ind_r,r_guess) in enumerate(grid_r)
-        excess = aiyagari_residual(r_guess,hh,govt,firm)
-        excess_asset_demand[ind_r] = excess
-    end
-    plot(excess_asset_demand,grid_r,label="Excess Asset Demand",ylabel="Rate",xlabel="Assets",legend=:bottomright,linewidth=3)
-
-
-# solve for an equilibrium return 
-    r_star = find_zero(x -> aiyagari_residual(x,hh,govt,firm), (-0.02, 0.1) ,verbose = true, maxiter = 10)
-    println("equilibrium real rate = $r_star")
-    display("Aggregate excess asset demand $(aiyagari_residual(r_star,hh,govt,firm))") # note - does not clear fully because of the grid 
  

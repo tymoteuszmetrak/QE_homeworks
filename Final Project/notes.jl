@@ -2,7 +2,9 @@
 using Distributions, QuantEcon, IterTools, Plots, Optim, Interpolations, LinearAlgebra, Inequality, Statistics, ColorSchemes,PrettyTables, Roots, Revise, Parameters
 using Inequality, LaTeXStrings, BenchmarkTools, LoopVectorization, NLsolve
 
-#1 - (2/3) * sum(hh.λ_z .* hh.z_vec.^0.85)
+#τ_w = 1 - (2/3) * sum(hh.λ_z .* hh.z_vec.^0.85)
+
+#function get_G nigdzie nie jest używana w kodzie
 ##################################################################################
 
 guess = 0.9340109
