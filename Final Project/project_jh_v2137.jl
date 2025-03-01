@@ -50,7 +50,7 @@ end
     γ = 2 # curvature parameter of utility function
     u = γ == 1 ? x -> log(x) : x -> (x^(1 - γ) - 1) / (1 - γ) # utility function
     ϕ = 0.0 # borrowing constraint
-    β = 0.95 # discount factor DO POPRAWY
+    β = 0.95 #discount factor DO POPRAWY
     N_z = 5 # grid size for Tauchen
     mc_z = tauchen(N_z, ρ_z, ν_z, ln_z_tilde)
     λ_z = stationary_distributions(mc_z)[1]
