@@ -8,7 +8,7 @@
 using Distributions, QuantEcon, IterTools, Plots, Optim, Interpolations, LinearAlgebra, Inequality, Statistics, ColorSchemes,PrettyTables, Roots, Revise, Parameters
 using Inequality, LaTeXStrings, BenchmarkTools, LoopVectorization, NLsolve
 
-# Set up parameters and function (do not change with lambda )
+# Set up parameters and function (they do not change with lambda)
 @with_kw struct FIRM
     α = 0.4 # capital share (USA 2019 labor share = 0.6: Penn World Table 10.01)
     δ = 0.04 # depreciation rate
@@ -26,12 +26,14 @@ function solve_firm(firm,r)
     return K_L, w
 end
 
+
 # Labor function 
 function get_aggregate_labor(ha_block)
     @unpack N_z, z_vec, λ_z = ha_block
     L =  sum(z_vec .* λ_z)
     return L
 end
+
 
 # gov parameters when lambda = 0.0
 @with_kw struct GOVT
@@ -60,18 +62,12 @@ end
     a_max  = 25 # 
     N_a    = 300 # assets grid 
 
-   
     a_min =  -ϕ # minimum assets
-    
 
     rescaler = range(0,1,length=N_a) .^ 5.0
 
     a_vec = a_min  .+ rescaler * (a_max - a_min) # grid for assets
-
-
-   # a_vec =  collect(range(a_min, a_max, length=N_a))  # note - uniform grid here, not the best choice
 end
-
 
 
 function Tσ_operator(v,σ_ind,model,prices,taxes)
@@ -82,17 +78,15 @@ function Tσ_operator(v,σ_ind,model,prices,taxes)
     v_new = similar(v)
     for (z_ind, z) in enumerate(z_vec) # loop over productivity
         for (a_ind, a) in enumerate(a_vec) # loop over assets today
-            #for (a_next_ind, a_next) in enumerate(a_vec) # loop over assets tomorrow
     
             a_next_ind  = σ_ind[a_ind,z_ind]    
             a_next      = a_vec[a_next_ind]
             v_new[a_ind,z_ind]   = u((1+r)*a + (1-τ_w)*w*(z^(1-lambda)) - a_next) + β * sum( v[a_next_ind,z_next_ind] * P_z[z_ind,z_next_ind] for z_next_ind in 1:N_z ) #DO POPRAWY - ŻEBY PASOWAŁO TEŻ DLA lambda = 0.15
         end
     end
-           
     return v_new
-
 end
+
 
 function T_operator(v,model,prices,taxes)
 
@@ -120,8 +114,8 @@ function T_operator(v,model,prices,taxes)
         end
     end
     return v_new, σ,  σ_ind
-
 end
+
 
 function opi(model, prices, taxes; tol = 1e-8, maxiter = 1000, max_m = 1)
     error = tol + 1.0; iter = 1 #  initialize
@@ -142,9 +136,7 @@ function opi(model, prices, taxes; tol = 1e-8, maxiter = 1000, max_m = 1)
     # one more iteration to get the policy function
     v, σ, σ_ind = T_operator(v,model,prices,taxes)
     return v, σ, σ_ind, iter, error
-        
 end
-
 
 
 function get_transition(model, σ_ind)
@@ -159,7 +151,6 @@ function get_transition(model, σ_ind)
                     Q[(z_ind-1)*N_a+1:z_ind*N_a,(z_next_ind-1)*(N_a)+1:z_next_ind*N_a] = (σ_ind[:,z_ind] .== (1:N_a)') * P_z[z_ind,z_next_ind]
             end
     end
-    
 return Q
 end
 
@@ -178,11 +169,11 @@ function stationary_distribution_hh(model, σ_ind)
             λ[:,j] = λ_vector[(j-1)*N_a+1:j*N_a]
         end
     end
-
     λ_a = sum(λ,dims=2)
     λ_z = sum(λ,dims=1)'
     return λ, λ_vector, λ_a, λ_z
 end
+
 
 function solve_hh_block(model, prices, taxes)
     v_opi, σ_opi, σ_ind_opi, iter_opi, error_opi = opi(model, prices, taxes,maxiter =5000, tol = 1e-8, max_m = 10)
@@ -198,11 +189,8 @@ function show_statistics(ha_block,grid,λ_a,λ_z)
     lorenz_a_pop,lorenz_a_share=lorenz_curve(grid.a_vec,vec(λ_a))
     lorenz_z_pop,lorenz_z_share=lorenz_curve(ha_block.z_vec,vec(λ_z))
 
-
-
     lorenz_a = LinearInterpolation(lorenz_a_pop, lorenz_a_share);
     lorenz_z = LinearInterpolation(lorenz_z_pop, lorenz_z_share);
-
 
     header = (["", "Assets", "Income"])
 
@@ -226,7 +214,7 @@ taxes  = (τ_w = 1/3, lambda = 0.0)
 
 v_opi, σ_opi,σ_ind_opi,iter_opi,error_opi, λ, λ_vector, λ_a, λ_z, A′ = solve_hh_block(hh,prices,taxes)
 
-
+println("Aggregated asset demand = $A′")
 println("error in VFI = $error_opi")
 
 
@@ -248,23 +236,26 @@ end
 residual_beta(β) = aiyagari_residual_beta(β, hh, govt, firm, 0.04, 1.0)
 firm = FIRM()
 govt = GOVT(τ_w = 1/3, lambda = 0.0)
-residual_beta(0.9340109) #0.00467227784140789, found by trial and error, no tested findzero and nsolve algos did not work properly
+residual_beta(0.9340109) #0.004608706716254574, found by trial and error, , not tested: findzero and nsolve algos did not work properly
 
 # NOTE THIS WAS CALCULATED AND BETA CALLIBRATED HERE 
 
-##################################################################################
-
-#############################REMAINING PARTS FOR lambda = 0.15
+##############################################################
+# REMAINING PARTS FOR lambda = 0.15
+##############################################################
 
 #FINDING tax rate for lambda = 0.15 
 τ_w2 = 1 - (2/3) * sum(hh.λ_z .* hh.z_vec.^0.85) #0.85 = 1 - 0.15; G/Y at constant 0.2
 
 
 #finding equilibrium prices for prices for lambda = 0.15 and corresponding τ_w2
-hh2 = HAProblem(β = 0.9340109) #updated Beta, which sets excess demand close to 0
+hh2 = HAProblem(β = 0.9340109) # updated Beta, which sets excess demand close to 0
 taxes2  = (τ_w = τ_w2, lambda = 0.15)
 
-################################################3
+# The calculations of other parameters are below, 
+# when comparing two economies
+
+################################################
 # test plotting
     lines_scheme = [get(ColorSchemes.thermal,LinRange(0.0,1.0,hh.N_z));];
     value_plot = plot(xlabel = "a", ylabel = "V", title = "Value function");
@@ -275,8 +266,10 @@ taxes2  = (τ_w = τ_w2, lambda = 0.15)
     end
     value_plot
 
-# now do the example of the full thing
 
+##################################
+# now do the example of the full thing
+##################################
     firm = FIRM()
     govt = GOVT(τ_w = 1/3, lambda = 0.0)
     L = get_aggregate_labor(hh)
@@ -297,6 +290,7 @@ taxes2  = (τ_w = τ_w2, lambda = 0.15)
     asset_demand(hh,prices,taxes)
 
     excess_demand = asset_demand(hh,prices,taxes) - asset_supply 
+
 # put all pieces together
     function aiyagari_residual(r,hh,govt,firm)
         
@@ -318,7 +312,6 @@ taxes2  = (τ_w = τ_w2, lambda = 0.15)
 
 # plot 
 
-
     grid_r = LinRange(-0.02,0.1,15)
     excess_asset_demand = zeros(length(grid_r))
     for (ind_r,r_guess) in enumerate(grid_r)
@@ -332,13 +325,12 @@ taxes2  = (τ_w = τ_w2, lambda = 0.15)
     r_star = find_zero(x -> aiyagari_residual(x,hh,govt,firm), (-0.02, 0.1) ,verbose = true, maxiter = 10)
     println("equilibrium real rate = $r_star")
     display("Aggregate excess asset demand $(aiyagari_residual(r_star,hh,govt,firm))") # note - does not clear fully because of the grid 
- 
-##################################################################################
+################################################################
 
 
-
+#####################################################
 # Generalize solving to compare economies
-# 
+###################################################### 
 function compute_equilibrium(firm, govt, hh, r, τ_w, lambda)
     K_L, w = solve_firm(firm, r)
     L = get_aggregate_labor(hh)
