@@ -256,7 +256,7 @@ taxes2  = (τ_w = τ_w2, lambda = 0.15)
 # when comparing two economies
 
 ################################################
-# test plotting
+# Plot 1 (Test Plotting )
     lines_scheme = [get(ColorSchemes.thermal,LinRange(0.0,1.0,hh.N_z));];
     value_plot = plot(xlabel = "a", ylabel = "V", title = "Value function");
 
@@ -310,7 +310,7 @@ taxes2  = (τ_w = τ_w2, lambda = 0.15)
     r_guess = 0.01
     aiyagari_residual(r_guess,hh,govt,firm)
 
-# plot 
+# Plot 2 (Excess Asset Demand with lambda=0)
 
     grid_r = LinRange(-0.02,0.1,15)
     excess_asset_demand = zeros(length(grid_r))
@@ -401,10 +401,11 @@ println("Gini Coefficient (Assets) | $(eq1.gini_assets) | $(eq2.gini_assets)")
 
 
 # Policy function - plotting - plot both economies for comparison
-# lambda = 0.0
+# Plot 3 (Policy function comparison)
+#lambda = 0.0
 plot(hh1.a_vec, σ_opi1[:, 1], label="Policy λ=0 (low z)", lw=2)
 plot!(hh1.a_vec, σ_opi1[:, end], label="Policy λ=0 (high z)", lw=2)
-# lambda = 0.15
+#  lambda = 0.15
 plot!(hh2.a_vec, σ_opi2[:, 1], label="Policy λ=0.15 (low z)", lw=2, linestyle=:dash)
 plot!(hh2.a_vec, σ_opi2[:, end], label="Policy λ=0.15 (high z)", lw=2, linestyle=:dash)
 title!("Policy Function Comparison")
@@ -413,7 +414,7 @@ ylabel!("Next Period Assets")
 display(plot!())
 
     
-# Value function
+# Plot 4 (Value function comparison)
 plot(hh1.a_vec, v_opi1[:, 1], label="Value λ=0 (low z)", lw=2)
 plot!(hh1.a_vec, v_opi1[:, end], label="Value λ=0 (high z)", lw=2)
 plot!(hh2.a_vec, v_opi2[:, 1], label="Value λ=0.15 (low z)", lw=2, linestyle=:dash)
@@ -426,7 +427,7 @@ display(plot!())
 
 
     
-# Asset distribution
+# Plot 5 (Asset distribution comparison)
 histogram(hh1.a_vec, weights=vec(λ_a1), normalize=true, bins=50, label="Asset Distribution (λ = 0)", alpha=0.5)
 histogram!(hh2.a_vec, weights=vec(λ_a2), normalize=true, bins=50, label="Asset Distribution (λ = 0.15)", alpha=0.5)
 
@@ -436,7 +437,7 @@ ylabel!("Density")
 display(plot!())
 
     
-# Lorenz curves
+# Plot 6 (Lorenz curve comparison)
 lorenz_assets1 = lorenz_curve(hh1.a_vec, vec(λ_a1))  
 lorenz_assets2 = lorenz_curve(hh2.a_vec, vec(λ_a2))  
 
